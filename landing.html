@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>🎧 SymBeat – Música e Letras IA 100% Local</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <style>
+    html, body {margin:0; padding:0; min-height:100%; font-family:sans-serif; background:#222; color:#eee;}
+    body {display:flex; flex-direction:column; min-height:100vh;}
+    header {text-align:center; padding:2em 0 1em;}
+    main {flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding-bottom:3em;}
+    .container {max-width:800px; margin:0 auto; padding:0 1em;}
+    .card-container {display:flex; flex-wrap:wrap; gap:2em; justify-content:center; margin-top:2em;}
+    .card {background:#181828bb; border-radius:1.5em; padding:1.5em; width:300px; box-shadow:0 2px 30px #0008; text-align:center; transition:transform 0.2s;}
+    .card:hover {transform:translateY(-5px);}
+    .card h3 {margin-top:0.5em;}
+    .card p {min-height:80px;}
+    .card-icon {font-size:3em; margin-bottom:0.3em;}
+    .btn {display:inline-block; padding:0.8em 1.5em; border-radius:0.8em; background:#7543e2; color:#fff; text-decoration:none; font-weight:bold; margin-top:1em; transition:background 0.2s;}
+    .btn:hover {background:#5f43e2;}
+    .small {font-size:0.9em; color:#bbb; margin-top:3em;}
+    footer {text-align:center; padding:1em; background:#181818;}
+    @media (max-width:700px) {
+      .card {width:90%; max-width:350px;}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>🎧 SymBeat</h1>
+      <h2>Música e Letras IA 100% Local</h2>
+      <p>Gere música e letras com IA diretamente no seu navegador, sem conexão com servidores externos</p>
+    </div>
+  </header>
+  
+  <main>
+    <div class="container">
+      <div class="card-container">
+        <div class="card">
+          <div class="card-icon">🎵</div>
+          <h3>Gerador de Música</h3>
+          <p>Crie beats e melodias baseados em descrições textuais. Escolha entre diversos estilos e exporte em WAV ou MIDI.</p>
+          <a href="index.html" class="btn">Gerar Música</a>
+        </div>
+        
+        <div class="card">
+          <div class="card-icon">🎤</div>
+          <h3>Gerador de Letras</h3>
+          <p>Crie letras de música baseadas em temas. Adapte ao estilo musical desejado e exporte em formato TXT.</p>
+          <a href="lyrics.html" class="btn">Gerar Letras</a>
+        </div>
+      </div>
+      
+      <div class="small">
+        <p>SymBeat utiliza síntese simbólica determinística para gerar conteúdo musical sem necessidade de modelos de IA pesados.</p>
+        <p>Todo o processamento acontece localmente no seu navegador através do Pyodide (Python no WebAssembly).</p>
+      </div>
+    </div>
+  </main>
+  
+  <footer>
+    <div class="container">
+      <p>Coautoria: Gustavo Buhrer Sukevicz & Lira Kosmos & Stella Meira dos Santos (2025)</p>
+      <p><a href="https://github.com/stellameira0/symbeat-app" style="color:#7543e2;">GitHub</a></p>
+    </div>
+  </footer>
+</body>
+</html>
