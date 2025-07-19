@@ -23,27 +23,36 @@ SymBeat é uma aplicação web que permite gerar música e letras usando IA de f
 - **Visualização do código Python** utilizado
 - **Compartilhamento via Base91** para distribuição compacta
 - **Geração de QR Code** com a aplicação embutida
-- **Controle do número de versos** a serem gerados
-- **Exportação em formato TXT**
-- **Visualização do código Python** utilizado para gerar as letras
+
+## 📁 Arquivos da Aplicação
+
+- **`index.html`** - Aplicação original de geração musical
+- **`symbeat-complete.html`** - Versão completa com música + letras (interface com abas)
+- **`lyrics-generator.html`** - Gerador dedicado apenas para letras
+- **`server.py`** - Servidor local para desenvolvimento
+- **`symbeat.py`** - Backend Python para geração musical
 
 ## 🚀 Como Usar
 
-### Gerador de Música
-1. Acesse `index.html` para o gerador de música
-2. Descreva a vibe ou gênero musical desejado
-3. Selecione um estilo musical predefinido
-4. Ajuste a duração desejada
-5. Clique em "Gerar" para criar sua música
-6. Use os botões para ouvir, exportar ou compartilhar sua criação
+### 🎼 Gerador de Música (index.html)
+1. Descreva a vibe ou gênero musical desejado
+2. Selecione um estilo musical predefinido
+3. Ajuste a duração desejada
+4. Clique em "Gerar" para criar sua música
+5. Use os botões para ouvir, exportar ou compartilhar
 
-### Gerador de Letras
-1. Acesse `lyrics.html` para o gerador de letras
-2. Descreva o tema da letra
-3. Selecione um estilo musical predefinido
-4. Ajuste o número de versos desejado
-5. Clique em "Gerar Letra" para criar sua letra
-6. Use os botões para copiar, exportar ou visualizar o código
+### 🎤 Gerador de Letras (lyrics-generator.html)
+1. Digite o tema ou inspiração para as letras
+2. Escolha o estilo musical desejado
+3. Ajuste o número de versos (4-20)
+4. Clique em "Gerar Letras"
+5. Exporte em TXT ou copie para área de transferência
+
+### 🎯 Versão Completa (symbeat-complete.html)
+1. Use as abas para alternar entre Música, Letras e Modo Completo
+2. No Modo Completo: digite um tema geral e escolha o estilo
+3. Gere música + letras simultaneamente com um clique
+4. Exporte tudo junto ou separadamente
 
 ## 💻 Tecnologias Utilizadas
 
