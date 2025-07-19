@@ -4,18 +4,25 @@ SymBeat é uma aplicação web que permite gerar música e letras usando IA de f
 
 ## 🎵 Funcionalidades
 
-### Geração de Música
+### 🎼 Geração de Música
 - **Geração de música** baseada em descrições textuais
 - **Seleção de estilos musicais** (Trap, Drill, Coral, Funk BR, Lofi, Bossa, Trance, Experimental)
 - **Controle de duração** da música (10-30 segundos)
 - **Exportação em formato WAV e MIDI**
-- **Visualização do código Python** utilizado para gerar a música
+
+### 🎤 Geração de Letras
+- **Geração de letras** baseada em temas e inspirações
+- **Múltiplos estilos** (Trap, Drill, Funk BR, Lofi, Bossa, Coral)
+- **Controle de quantidade** de versos (4-20 linhas)
+- **Exportação em formato TXT**
+- **Cópia para área de transferência**
+
+### 🎯 Funcionalidades Avançadas
+- **Modo Completo**: Gera música + letras simultaneamente
+- **Interface com abas** para diferentes modos de uso
+- **Visualização do código Python** utilizado
 - **Compartilhamento via Base91** para distribuição compacta
 - **Geração de QR Code** com a aplicação embutida
-
-### Geração de Letras
-- **Geração de letras** baseada em temas fornecidos pelo usuário
-- **Estilos de letras** adaptados a diferentes gêneros musicais
 - **Controle do número de versos** a serem gerados
 - **Exportação em formato TXT**
 - **Visualização do código Python** utilizado para gerar as letras

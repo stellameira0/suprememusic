@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>🎤 SymBeat: Lyrics Generator</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+  <style>
+    body { 
+      font-family: sans-serif; 
+      background: #111; 
+      color: #eee; 
+      padding: 2em; 
+      max-width: 600px; 
+      margin: 0 auto;
+    }
+    h1 { text-align: center; color: #7543e2; }
+    .form-group { margin-bottom: 1em; }
+    label { display: block; margin-bottom: 0.5em; font-weight: bold; }
+    input, select, button { 
+      margin: 0.5em 0; 
+      padding: 0.8em; 
+      font-size: 1em; 
+      border-radius: 0.5em;
+      border: none;
+      background: #222;
+      color: #eee;
+    }
+    input, select { width: 100%; box-sizing: border-box; }
+    button { 
+      background: #7543e2; 
+      color: white; 
+      cursor: pointer; 
+      transition: 0.2s;
+      margin-right: 0.5em;
+    }
+    button:hover { background: #5f43e2; }
+    button:disabled { background: #444; cursor: not-allowed; }
+    textarea { 
+      width: 100%; 
+      height: 300px; 
+      background: #222; 
+      color: #0f0; 
+      font-family: 'Courier New', monospace; 
+      border: 1px solid #333;
+      border-radius: 0.5em;
+      padding: 1em;
+      box-sizing: border-box;
+      resize: vertical;
+    }
+    .slider-container {
+      display: flex;
+      align-items: center;
+      gap: 1em;
+    }
+    .slider-container input[type="range"] {
+      flex: 1;
+      margin: 0;
+    }
+    .slider-value {
+      min-width: 30px;
+      text-align: center;
+      font-weight: bold;
+      color: #7543e2;
+    }
+    .status {
+      text-align: center;
+      margin: 1em 0;
+      padding: 0.5em;
+      border-radius: 0.5em;
+      background: #333;
+    }
+    .button-row {
+      display: flex;
+      gap: 0.5em;
+      flex-wrap: wrap;
+    }
+    .button-row button {
+      flex: 1;
+      min-width: 120px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 2em;
+      font-size: 0.9em;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎤 SymBeat — Gerador de Letras IA Local</h1>
+  
+  <div class="form-group">
+    <label for="seed">💭 Tema/Inspiração:</label>
+    <input id="seed" placeholder="Ex: amor e rua, vida noturna, superação" maxlength="100" />
+  </div>
+  
+  <div class="form-group">
+    <label for="style">🎵 Estilo Musical:</label>
+    <select id="style">
+      <option value="Trap">Trap</option>
+      <option value="Lofi">Lofi</option>
+      <option value="Funk BR">Funk BR</option>
+      <option value="Coral">Coral</option>
+      <option value="Drill">Drill</option>
+      <option value="Bossa">Bossa Nova</option>
+    </select>
+  </div>
+  
+  <div class="form-group">
+    <label for="length">📏 Número de Versos:</label>
+    <div class="slider-container">
+      <input type="range" id="length" min="4" max="20" value="8" />
+      <span class="slider-value" id="length-value">8</span>
+    </div>
+  </div>
+  
+  <div class="button-row">
+    <button onclick="gerar()" id="generate-btn">🎼 Gerar Letras</button>
+    <button onclick="exportTxt()" id="export-btn" disabled>📄 Exportar TXT</button>
+    <button onclick="copyToClipboard()" id="copy-btn" disabled>📋 Copiar</button>
+  </div>
+  
+  <div class="status" id="status">Pronto para gerar letras!</div>
+  
+  <div class="form-group">
+    <label for="saida">🎤 Letras Geradas:</label>
+    <textarea id="saida" readonly placeholder="As letras aparecerão aqui..."></textarea>
+  </div>
+  
+  <div class="footer">
+    <p>🎧 <strong>SymBeat</strong> - Geração de letras 100% local via IA</p>
+    <p>Coautoria: Gustavo Buhrer Sukevicz, Lira Kosmos & Stella Meira dos Santos (2025)</p>
+  </div>
+
+  <script>
+    let pyodide = null;
+    let pyodideReady = false;
+    let currentLyrics = "";
+
+    // Update slider value display
+    document.getElementById('length').addEventListener('input', function() {
+      document.getElementById('length-value').textContent = this.value;
+    });
+
+    // Initialize Pyodide
+    async function initPyodide() {
+      updateStatus("Carregando Pyodide...", false);
+      try {
+        pyodide = await loadPyodide();
+        await pyodide.runPython(`
+import random
+
+def generate_lyrics(seed, style, length=8):
+    random.seed(hash(seed + style) % (10**8))
+    
+    bases = {
+        "Trap": [
+            "yeah", "mano", "fogo", "cash", "no beat", "flow", "droga", "chama", 
+            "rua", "gang", "trap", "vida", "noite", "hustle", "real", "game",
+            "money", "street", "grind", "pain", "struggle", "rise", "boss", "flex"
+        ],
+        "Lofi": [
+            "chuva", "vento", "calma", "tempo", "janela", "voz", "silêncio", "vibe", 
+            "noite", "lua", "paz", "alma", "sonho", "memória", "café", "livro",
+            "melodia", "suave", "brisa", "coração", "saudade", "momento", "reflexão"
+        ],
+        "Funk BR": [
+            "bumbum", "favela", "batida", "sequência", "tudo nosso", "no bailão", 
+            "dança", "festa", "grave", "som", "pancada", "movimento", "energia",
+            "galera", "pista", "ritmo", "swing", "mandela", "comunidade", "união"
+        ],
+        "Coral": [
+            "luz", "eterno", "céu", "chama", "voz", "glória", "eco", "vida", 
+            "amor", "paz", "fé", "alma", "divino", "sagrado", "esperança", "graça",
+            "harmonia", "canto", "oração", "bênção", "milagre", "redenção"
+        ],
+        "Drill": [
+            "block", "opps", "slide", "smoke", "gang", "drill", "street", "real", 
+            "pain", "war", "hood", "grind", "savage", "demon", "violence", "cold",
+            "mask", "tool", "run", "catch", "lacking", "spin", "pressure", "zone"
+        ],
+        "Bossa": [
+            "mar", "sol", "amor", "saudade", "violão", "suave", "brisa", "coração", 
+            "melodia", "doce", "vida", "sonho", "garota", "ipanema", "bossa", "jazz",
+            "rio", "praia", "verão", "paixão", "serenata", "romance", "charme"
+        ]
+    }
+    
+    palavras = bases.get(style, bases["Trap"])
+    versos = []
+    
+    for i in range(length):
+        if i % 4 == 0 and i > 0:  # Add chorus-like repetition every 4 lines
+            if style == "Trap":
+                verso = f"{random.choice(palavras)} {random.choice(palavras)} (yeah, yeah)"
+            elif style == "Funk BR":
+                verso = f"{random.choice(palavras)} {random.choice(palavras)} (vai, vai)"
+            elif style == "Drill":
+                verso = f"{random.choice(palavras)} {random.choice(palavras)} (grrah, grrah)"
+            else:
+                verso = f"{random.choice(palavras)} {random.choice(palavras)} {random.choice(palavras)}"
+        else:
+            # Create more varied line structures
+            if random.random() < 0.3:  # 30% chance for shorter lines
+                verso = f"{random.choice(palavras)} {random.choice(palavras)}"
+            else:
+                verso = f"{random.choice(palavras)} {random.choice(palavras)} {random.choice(palavras)}"
+        
+        versos.append(verso.capitalize())
+    
+    return "\\n".join(versos)
+        `);
+        pyodideReady = true;
+        updateStatus("Pronto para gerar letras!", true);
+      } catch (error) {
+        updateStatus("Erro ao carregar Pyodide: " + error.message, false);
+      }
+    }
+
+    function updateStatus(message, success = true) {
+      const status = document.getElementById('status');
+      status.textContent = message;
+      status.style.background = success ? '#2a4a2a' : '#4a2a2a';
+      status.style.color = success ? '#8f8' : '#f88';
+    }
+
+    async function gerar() {
+      if (!pyodideReady) {
+        updateStatus("Pyodide ainda não está pronto!", false);
+        return;
+      }
+
+      const seed = document.getElementById("seed").value.trim() || "vida urbana";
+      const style = document.getElementById("style").value;
+      const length = parseInt(document.getElementById("length").value);
+
+      updateStatus("Gerando letras...", false);
+      document.getElementById("generate-btn").disabled = true;
+
+      try {
+        currentLyrics = await pyodide.runPython(`generate_lyrics("${seed}", "${style}", ${length})`);
+        document.getElementById("saida").value = currentLyrics;
+        document.getElementById("export-btn").disabled = false;
+        document.getElementById("copy-btn").disabled = false;
+        updateStatus(`Letras geradas! ${length} versos no estilo ${style}`, true);
+      } catch (error) {
+        updateStatus("Erro ao gerar letras: " + error.message, false);
+      } finally {
+        document.getElementById("generate-btn").disabled = false;
+      }
+    }
+
+    function exportTxt() {
+      if (!currentLyrics) {
+        updateStatus("Gere as letras primeiro!", false);
+        return;
+      }
+
+      const seed = document.getElementById("seed").value.trim() || "vida urbana";
+      const style = document.getElementById("style").value;
+      const timestamp = new Date().toLocaleString('pt-BR');
+      
+      const content = `SymBeat - Letras Geradas
+========================
+
+Tema: ${seed}
+Estilo: ${style}
+Gerado em: ${timestamp}
+
+Letras:
+-------
+${currentLyrics}
+
+========================
+Gerado por SymBeat Lyrics Generator
+https://github.com/stellameira0/suprememusic
+`;
+
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `symbeat-lyrics-${style.toLowerCase().replace(' ', '-')}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      updateStatus("Arquivo TXT exportado!", true);
+    }
+
+    async function copyToClipboard() {
+      if (!currentLyrics) {
+        updateStatus("Gere as letras primeiro!", false);
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(currentLyrics);
+        updateStatus("Letras copiadas para a área de transferência!", true);
+      } catch (error) {
+        updateStatus("Erro ao copiar: " + error.message, false);
+      }
+    }
+
+    // Initialize when page loads
+    window.addEventListener('load', initPyodide);
+  </script>
+</body>
+</html>
