@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>🎧 SymBeat: Lyrics Generator</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <style>
+    html, body {margin:0; padding:0; min-height:100%; font-family:sans-serif; background:#222; color:#eee;}
+    body {display:flex; flex-direction:column; min-height:100vh;}
+    header {text-align:center; padding:1em 0;}
+    main {flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;}
+    .container {background: #181828bb; border-radius: 1.5em; padding: 1.5em 1.2em; max-width: 97vw; width: 400px; box-shadow: 0 2px 30px #0008;}
+    label {display:block; margin-bottom:0.3em; font-size:1em;}
+    textarea, input[type=text] {width:100%; border-radius:.7em; border:none; padding:.8em; font-size:1em; margin-bottom:.7em;}
+    textarea {resize:vertical; min-height:2.5em;}
+    .style-menu {display:flex; flex-wrap:wrap; gap:0.4em; margin-bottom:1em;}
+    .style-btn {flex:1 0 30%; background:#2e2e4a; color:#ffe; border:none; padding:.6em 0.7em; border-radius:.7em; font-size:0.93em; margin-bottom:0.2em; cursor:pointer; transition:.12s;}
+    .style-btn.selected,.style-btn:active {background:#5f43e2; color:#fff;}
+    .btn-row {display:flex; flex-wrap:wrap; gap:0.6em; margin-top:1.1em;}
+    button {flex:1 0 38%; padding:.8em 0; border-radius:.8em; border:none; background:#2e2e4a; color:#ffe; font-size:1.05em; cursor:pointer; box-shadow:0 1px 8px #0005; transition:.10s;}
+    button.primary {background:#7543e2;}
+    button:active {background:#5f43e2;}
+    .small {font-size:.95em; color:#bbb;}
+    #lyrics-output {white-space:pre-wrap; background:#181832; color:#eee; border-radius:.7em; padding:1em; font-size:.98em; margin-top:.7em; min-height:200px; max-height:400px; overflow:auto;}
+    @media (max-width:520px) {
+      .container {width:99vw; min-width:0; padding:0.9em 0.2em;}
+      main {padding-bottom:2em;}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div>
+    <h2>🎧 SymBeat – Gerador de Letras IA 100% Local</h2>
+    <div class="small">Coautoria: Gustavo Buhrer Sukevicz & Lira Kosmos & Stella Meira dos Santos (2025)</div>
+  </div>
+</header>
+<main>
+  <div class="container">
+    <form id="lyrics-form" autocomplete="off">
+      <label for="theme">Descreva o tema:</label>
+      <textarea id="theme" maxlength="110" placeholder="Ex: amor e rua" required rows="2"></textarea>
+      <div class="style-menu" id="style-menu">
+        <button type="button" class="style-btn">Trap</button>
+        <button type="button" class="style-btn">Lofi</button>
+        <button type="button" class="style-btn">Funk BR</button>
+        <button type="button" class="style-btn">Coral</button>
+        <button type="button" class="style-btn">Bossa</button>
+        <button type="button" class="style-btn">Trance</button>
+        <button type="button" class="style-btn">Experimental</button>
+      </div>
+      <div class="slider-row" style="display:flex; align-items:center; gap:0.7em;">
+        <label for="length" style="margin:0;">Versos:</label>
+        <input type="range" min="4" max="16" value="8" id="length">
+        <span id="length-val">8</span>
+      </div>
+      <div class="btn-row">
+        <button type="button" id="gen-btn" class="primary" title="Gerar">🎼 Gerar Letra</button>
+        <button type="button" id="copy-btn" title="Copiar">📋 Copiar</button>
+        <button type="button" id="export-btn" title="Exportar TXT">📥 Exportar TXT</button>
+        <button type="button" id="py-btn" title="Ver Código Python">🎛️ Ver Código Python</button>
+      </div>
+    </form>
+    <div id="status" class="small" style="margin-top:0.8em; min-height:1.5em;">Pronto.</div>
+    <div id="lyrics-output"></div>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+<script>
+const styles = [
+  "Trap", "Lofi", "Funk BR", "Coral", "Bossa", "Trance", "Experimental"
+];
+let currentStyle = "Trap";
+let pyodideReady = false, pyodide = null;
+
+function showStatus(msg, ok=true) {
+  const st = document.getElementById('status');
+  st.textContent = msg;
+  st.style.color = ok ? "#bbb" : "#fa9";
+}
+
+function getSeed(str) {
+  // Simple deterministic hash for seed (32bit)
+  let h = 5381;
+  for (let i=0;i<str.length;i++) h = ((h<<5)+h)+str.charCodeAt(i);
+  return Math.abs(h % 4294967295);
+}
+
+function enableUI(en=true) {
+  document.querySelectorAll("button,textarea,input").forEach(el=>el.disabled=!en);
+}
+
+function selectStyle(style) {
+  currentStyle = style;
+  document.querySelectorAll('.style-btn').forEach(btn=>{
+    btn.classList.toggle('selected', btn.textContent===style);
+  });
+}
+document.getElementById('style-menu').addEventListener('click', e=>{
+  if (e.target.classList.contains('style-btn')) selectStyle(e.target.textContent);
+});
+selectStyle("Trap");
+document.getElementById('length').addEventListener('input', e=>{
+  document.getElementById('length-val').textContent = e.target.value;
+});
+
+// ---- Pyodide Loader ----
+async function initPyodide() {
+  showStatus("Carregando Pyodide...");
+  pyodide = await loadPyodide({indexURL:"https://cdn.jsdelivr.net/pyodide/v0.25.1/full/"});
+  await pyodide.runPythonAsync(`
+import random
+
+def generate_lyrics(seed, style, length=8):
+    random.seed(hash(seed + style) % (10**8))
+    bases = {
+        "Trap": ["yeah", "mano", "fogo", "cash", "no beat", "flow", "droga", "chama", "rua", "noite", "vida", "luta"],
+        "Lofi": ["chuva", "vento", "calma", "tempo", "janela", "voz", "silêncio", "vibe", "sonho", "memória", "café", "livro"],
+        "Funk BR": ["bumbum", "favela", "batida", "sequência", "tudo nosso", "no bailão", "pancadão", "baile", "noite", "gata", "mano"],
+        "Coral": ["luz", "eterno", "céu", "chama", "voz", "glória", "eco", "vida", "alma", "espírito", "caminho", "verdade"],
+        "Bossa": ["mar", "amor", "sol", "praia", "saudade", "beleza", "coração", "olhar", "canção", "poesia", "cidade", "tarde"],
+        "Trance": ["mente", "viagem", "universo", "energia", "pulso", "ritmo", "infinito", "luz", "tempo", "espaço", "dimensão"],
+        "Experimental": ["caos", "ruído", "silêncio", "fragmento", "abstrato", "concreto", "digital", "analógico", "distorção", "glitch"]
+    }
+    
+    conectores = ["e", "com", "sem", "no", "na", "do", "da", "que", "pra", "pro", "como", "quando"]
+    verbos = ["sinto", "vejo", "ouço", "penso", "sonho", "vivo", "morro", "canto", "danço", "corro", "paro", "sigo"]
+    
+    palavras = bases.get(style, bases["Trap"])
+    versos = []
+    
+    for i in range(length):
+        if i % 4 == 0 and i > 0:  # Adiciona um refrão a cada 4 versos
+            verso = f"{random.choice(palavras).upper()} {random.choice(palavras).upper()}!"
+        elif random.random() < 0.3:  # 30% de chance de verso com estrutura verbo + conector + substantivo
+            verso = f"{random.choice(verbos)} {random.choice(conectores)} {random.choice(palavras)}"
+        else:  # Verso padrão com 3 palavras
+            verso = f"{random.choice(palavras)} {random.choice(conectores)} {random.choice(palavras)}"
+        
+        # Adiciona variações ocasionais
+        if random.random() < 0.2:
+            verso += f", {random.choice(palavras)}"
+        if random.random() < 0.1:
+            verso = verso.upper()  # Ocasionalmente coloca tudo em maiúsculas para ênfase
+            
+        versos.append(verso.capitalize())
+    
+    # Adiciona um verso final com repetição para fechamento
+    final_word = random.choice(palavras)
+    versos.append(f"{final_word}, {final_word}... {final_word}.")
+    
+    return "\\n".join(versos)
+  `);
+  pyodideReady = true;
+  showStatus("Pronto!");
+}
+initPyodide();
+
+// ---- Lyrics Generation Logic ----
+async function generateLyrics() {
+  if (!pyodideReady) {showStatus("Pyodide não carregado",false); return;}
+  
+  const theme = document.getElementById('theme').value.trim() || "amor e rua";
+  const style = currentStyle;
+  const length = parseInt(document.getElementById('length').value);
+  
+  showStatus("Gerando letra...");
+  enableUI(false);
+  
+  try {
+    const lyrics = await pyodide.runPythonAsync(`generate_lyrics(${JSON.stringify(theme)}, ${JSON.stringify(style)}, ${length})`);
+    document.getElementById('lyrics-output').textContent = lyrics;
+    showStatus("Letra gerada!");
+  } catch(e) {
+    showStatus("Erro: "+e.message, false);
+  }
+  
+  enableUI(true);
+}
+
+// ---- Utility Functions ----
+function copyLyrics() {
+  const lyrics = document.getElementById('lyrics-output').textContent;
+  if (!lyrics) {
+    showStatus("Gere uma letra primeiro.", false);
+    return;
+  }
+  
+  navigator.clipboard.writeText(lyrics)
+    .then(() => showStatus("Letra copiada para a área de transferência!"))
+    .catch(() => showStatus("Erro ao copiar.", false));
+}
+
+function exportTXT() {
+  const lyrics = document.getElementById('lyrics-output').textContent;
+  if (!lyrics) {
+    showStatus("Gere uma letra primeiro.", false);
+    return;
+  }
+  
+  const theme = document.getElementById('theme').value.trim() || "symbeat";
+  const blob = new Blob([lyrics], {type: "text/plain"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `symbeat_${theme.replace(/\s+/g, '_')}.txt`;
+  a.click();
+  showStatus("Arquivo TXT exportado!");
+}
+
+function showPythonCode() {
+  const theme = document.getElementById('theme').value.trim() || "amor e rua";
+  const style = currentStyle;
+  const length = parseInt(document.getElementById('length').value);
+  
+  const code = `
+# Geração simbólica determinística de letras estilo '${style}'
+import random
+
+def generate_lyrics(seed="${theme}", style="${style}", length=${length}):
+    random.seed(hash(seed + style) % (10**8))
+    bases = {
+        "Trap": ["yeah", "mano", "fogo", "cash", "no beat", "flow", "droga", "chama", "rua", "noite"],
+        "Lofi": ["chuva", "vento", "calma", "tempo", "janela", "voz", "silêncio", "vibe", "sonho"],
+        "Funk BR": ["bumbum", "favela", "batida", "sequência", "tudo nosso", "no bailão", "pancadão"],
+        "Coral": ["luz", "eterno", "céu", "chama", "voz", "glória", "eco", "vida", "alma"],
+        # ...outros estilos
+    }
+    
+    # ...código completo: github.com/stellameira0/symbeat-app
+    # Veja função generate_lyrics(seed, style, length)
+`;
+  
+  const output = document.getElementById('lyrics-output');
+  output.textContent = code;
+  showStatus("Código Python exibido.");
+}
+
+// ---- UI Events ----
+document.getElementById('gen-btn').onclick = generateLyrics;
+document.getElementById('copy-btn').onclick = copyLyrics;
+document.getElementById('export-btn').onclick = exportTXT;
+document.getElementById('py-btn').onclick = showPythonCode;
+document.getElementById('lyrics-form').onsubmit = e=>e.preventDefault();
+</script>
+</body>
+</html>

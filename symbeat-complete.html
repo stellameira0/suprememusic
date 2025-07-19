@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>🎧 SymBeat Complete – Música + Letras IA 100% Local</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <style>
+    html, body {margin:0; padding:0; min-height:100%; font-family:sans-serif; background:#222; color:#eee;}
+    body {display:flex; flex-direction:column; min-height:100vh;}
+    header {text-align:center; padding:1em 0;}
+    main {flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:1em;}
+    .container {background: #181828bb; border-radius: 1.5em; padding: 1.5em 1.2em; max-width: 97vw; width: 500px; box-shadow: 0 2px 30px #0008; margin-bottom: 1em;}
+    .tabs {display:flex; margin-bottom:1em; border-radius:.8em; overflow:hidden;}
+    .tab {flex:1; padding:.8em; background:#2e2e4a; color:#ffe; border:none; cursor:pointer; transition:.12s;}
+    .tab.active {background:#7543e2; color:#fff;}
+    .tab-content {display:none;}
+    .tab-content.active {display:block;}
+    label {display:block; margin-bottom:0.3em; font-size:1em;}
+    textarea, input[type=text] {width:100%; border-radius:.7em; border:none; padding:.8em; font-size:1em; margin-bottom:.7em; background:#2a2a3a; color:#eee;}
+    textarea {resize:vertical; min-height:2.5em;}
+    .style-menu {display:flex; flex-wrap:wrap; gap:0.4em; margin-bottom:1em;}
+    .style-btn {flex:1 0 30%; background:#2e2e4a; color:#ffe; border:none; padding:.6em 0.7em; border-radius:.7em; font-size:0.93em; margin-bottom:0.2em; cursor:pointer; transition:.12s;}
+    .style-btn.selected,.style-btn:active {background:#5f43e2; color:#fff;}
+    .slider-row {display:flex; align-items:center; gap:0.7em;}
+    .slider-row input[type=range] {flex:1;}
+    .btn-row {display:flex; flex-wrap:wrap; gap:0.6em; margin-top:1.1em;}
+    button {flex:1 0 38%; padding:.8em 0; border-radius:.8em; border:none; background:#2e2e4a; color:#ffe; font-size:1.05em; cursor:pointer; box-shadow:0 1px 8px #0005; transition:.10s;}
+    button.primary {background:#7543e2;}
+    button:active {background:#5f43e2;}
+    .small {font-size:.95em; color:#bbb;}
+    #python-code {white-space:pre-wrap; background:#181832; color:#eee; border-radius:.7em; padding:1em; font-size:.98em; margin-top:.7em; max-height:220px; overflow:auto;}
+    #lyrics-output {background:#181832; color:#0f0; border-radius:.7em; padding:1em; font-family:monospace; min-height:150px; white-space:pre-wrap; margin-top:.7em;}
+    #qr-modal {display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99;background:#000b;align-items:center;justify-content:center;}
+    #qr-modal-content {background:#222;padding:1.3em 2em;border-radius:1.2em;box-shadow:0 2px 30px #000a;text-align:center;}
+    @media (max-width:520px) {
+      .container {width:99vw; min-width:0; padding:0.9em 0.2em;}
+      main {padding-bottom:2em;}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div>
+    <h2>🎧 SymBeat Complete – Música + Letras IA 100% Local</h2>
+    <div class="small">Coautoria: Gustavo Buhrer Sukevicz & Lira Kosmos & Stella Meira dos Santos (2025)</div>
+  </div>
+</header>
+<main>
+  <div class="container">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('music')">🎼 Música</button>
+      <button class="tab" onclick="switchTab('lyrics')">🎤 Letras</button>
+      <button class="tab" onclick="switchTab('complete')">🎯 Completo</button>
+    </div>
+
+    <!-- MÚSICA TAB -->
+    <div id="music-tab" class="tab-content active">
+      <form id="music-form" autocomplete="off">
+        <label for="desc">Descreva a vibe ou gênero:</label>
+        <textarea id="desc" maxlength="110" placeholder="Ex: Trap lento com coral épico" required rows="2"></textarea>
+        <div class="style-menu" id="style-menu">
+          <button type="button" class="style-btn">Trap</button>
+          <button type="button" class="style-btn">Drill</button>
+          <button type="button" class="style-btn">Coral</button>
+          <button type="button" class="style-btn">Funk BR</button>
+          <button type="button" class="style-btn">Lofi</button>
+          <button type="button" class="style-btn">Bossa</button>
+          <button type="button" class="style-btn">Trance</button>
+          <button type="button" class="style-btn">Experimental</button>
+        </div>
+        <div class="slider-row">
+          <label for="dur" style="margin:0;">Duração:</label>
+          <input type="range" min="10" max="30" value="15" id="dur">
+          <span id="dur-val">15s</span>
+        </div>
+        <div class="btn-row">
+          <button type="button" id="gen-btn" class="primary" title="Gerar">🎼 Gerar</button>
+          <button type="button" id="play-btn" title="Ouvir">▶️ Ouvir</button>
+          <button type="button" id="exp-wav-btn" title="Exportar WAV">📥 Exportar WAV</button>
+          <button type="button" id="exp-midi-btn" title="Exportar MIDI">🎹 Exportar MIDI</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- LETRAS TAB -->
+    <div id="lyrics-tab" class="tab-content">
+      <form id="lyrics-form" autocomplete="off">
+        <label for="lyrics-seed">Tema/Inspiração:</label>
+        <input type="text" id="lyrics-seed" placeholder="Ex: amor e rua, vida noturna, superação" maxlength="50">
+        <label for="lyrics-style">Estilo:</label>
+        <select id="lyrics-style" style="width:100%; padding:.8em; border-radius:.7em; border:none; background:#2a2a3a; color:#eee; margin-bottom:.7em;">
+          <option value="Trap">Trap</option>
+          <option value="Lofi">Lofi</option>
+          <option value="Funk BR">Funk BR</option>
+          <option value="Coral">Coral</option>
+          <option value="Drill">Drill</option>
+          <option value="Bossa">Bossa</option>
+        </select>
+        <div class="slider-row">
+          <label for="lyrics-length" style="margin:0;">Versos:</label>
+          <input type="range" min="4" max="16" value="8" id="lyrics-length">
+          <span id="lyrics-length-val">8</span>
+        </div>
+        <div class="btn-row">
+          <button type="button" id="gen-lyrics-btn" class="primary" title="Gerar Letras">🎤 Gerar Letras</button>
+          <button type="button" id="exp-txt-btn" title="Exportar TXT">📄 Exportar TXT</button>
+        </div>
+      </form>
+      <div id="lyrics-output" style="display:none;"></div>
+    </div>
+
+    <!-- COMPLETO TAB -->
+    <div id="complete-tab" class="tab-content">
+      <form id="complete-form" autocomplete="off">
+        <label for="complete-theme">Tema Geral:</label>
+        <textarea id="complete-theme" placeholder="Ex: Noite urbana, amor perdido, conquista" rows="2"></textarea>
+        <div class="style-menu" id="complete-style-menu">
+          <button type="button" class="style-btn">Trap</button>
+          <button type="button" class="style-btn">Drill</button>
+          <button type="button" class="style-btn">Funk BR</button>
+          <button type="button" class="style-btn">Lofi</button>
+        </div>
+        <div class="btn-row">
+          <button type="button" id="gen-complete-btn" class="primary" title="Gerar Música + Letras">🎯 Gerar Completo</button>
+          <button type="button" id="play-complete-btn" title="Ouvir">▶️ Ouvir</button>
+          <button type="button" id="exp-complete-btn" title="Exportar Tudo">📦 Exportar Tudo</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="btn-row" style="margin-top:1.5em; border-top:1px solid #333; padding-top:1em;">
+      <button type="button" id="py-btn" title="Ver Código Python">🎛️ Ver Código Python</button>
+      <button type="button" id="b91-btn" title="Copiar App em B91">📋 Copiar App em B91</button>
+      <button type="button" id="qr-btn" title="Gerar QR com App">📡 Gerar QR com App</button>
+    </div>
+
+    <div id="status" class="small" style="margin-top:0.8em; min-height:1.5em;">Pronto.</div>
+    <div id="python-code" style="display:none;"></div>
+  </div>
+</main>
+
+<div id="qr-modal">
+  <div id="qr-modal-content">
+    <div id="qr-box"></div>
+    <button onclick="hideQR()">Fechar</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+<script>
+const styles = ["Trap", "Drill", "Coral", "Funk BR", "Lofi", "Bossa", "Trance", "Experimental"];
+let currentStyle = "Trap";
+let currentCompleteStyle = "Trap";
+let audioBuffer = null, wavBlob = null, midiBlob = null, lastSeed = null, lastPythonCode = "";
+let pyodideReady = false, pyodide = null, musicData = null, musicMeta = null;
+let currentLyrics = "";
+
+function showStatus(msg, ok=true) {
+  const st = document.getElementById('status');
+  st.textContent = msg;
+  st.style.color = ok ? "#bbb" : "#fa9";
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+  document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+  document.getElementById(`${tab}-tab`).classList.add('active');
+}
+
+function getSeed(str) {
+  let h = 5381;
+  for (let i=0;i<str.length;i++) h = ((h<<5)+h)+str.charCodeAt(i);
+  return Math.abs(h % 4294967295);
+}
+
+function getFormVals() {
+  const desc = document.getElementById('desc').value.trim();
+  const dur = +document.getElementById('dur').value;
+  const style = currentStyle;
+  const seed = getSeed(desc+"|"+style+"|"+dur);
+  return {desc, dur, style, seed};
+}
+
+function enableUI(en=true) {
+  document.querySelectorAll("button,textarea,input,select").forEach(el=>el.disabled=!en);
+}
+
+function selectStyle(style, menu='style-menu') {
+  if (menu === 'style-menu') currentStyle = style;
+  else currentCompleteStyle = style;
+  
+  document.querySelectorAll(`#${menu} .style-btn`).forEach(btn=>{
+    btn.classList.toggle('selected', btn.textContent===style);
+  });
+}
+
+// Event listeners for style menus
+document.getElementById('style-menu').addEventListener('click', e=>{
+  if (e.target.classList.contains('style-btn')) selectStyle(e.target.textContent, 'style-menu');
+});
+document.getElementById('complete-style-menu').addEventListener('click', e=>{
+  if (e.target.classList.contains('style-btn')) selectStyle(e.target.textContent, 'complete-style-menu');
+});
+
+selectStyle("Trap", 'style-menu');
+selectStyle("Trap", 'complete-style-menu');
+
+document.getElementById('dur').addEventListener('input', e=>{
+  document.getElementById('dur-val').textContent = e.target.value+"s";
+});
+document.getElementById('lyrics-length').addEventListener('input', e=>{
+  document.getElementById('lyrics-length-val').textContent = e.target.value;
+});
+
+// ---- Pyodide Loader ----
+async function initPyodide() {
+  showStatus("Carregando Pyodide...");
+  pyodide = await loadPyodide({indexURL:"https://cdn.jsdelivr.net/pyodide/v0.25.1/full/"});
+  showStatus("Baixando dependências Python...");
+  await pyodide.loadPackage(['micropip','numpy','scipy']);
+  await pyodide.runPythonAsync(`
+import micropip
+try:
+  await micropip.install('midiutil')
+except:
+  pass
+import numpy, scipy.signal, wave, random
+try: import midiutil
+except: midiutil = None
+import io, base64
+
+def generate_lyrics(seed, style, length=8):
+    random.seed(hash(seed + style) % (10**8))
+    bases = {
+        "Trap": ["yeah", "mano", "fogo", "cash", "no beat", "flow", "droga", "chama", "rua", "gang", "trap", "vida"],
+        "Lofi": ["chuva", "vento", "calma", "tempo", "janela", "voz", "silêncio", "vibe", "noite", "lua", "paz", "alma"],
+        "Funk BR": ["bumbum", "favela", "batida", "sequência", "tudo nosso", "no bailão", "dança", "festa", "grave", "som"],
+        "Coral": ["luz", "eterno", "céu", "chama", "voz", "glória", "eco", "vida", "amor", "paz", "fé", "alma"],
+        "Drill": ["block", "opps", "slide", "smoke", "gang", "drill", "street", "real", "pain", "war", "hood", "grind"],
+        "Bossa": ["mar", "sol", "amor", "saudade", "violão", "suave", "brisa", "coração", "melodia", "doce", "vida", "sonho"]
+    }
+    palavras = bases.get(style, bases["Trap"])
+    versos = []
+    for i in range(length):
+        if i % 4 == 0 and i > 0:  # Add chorus-like repetition
+            verso = f"{random.choice(palavras)} {random.choice(palavras)} (yeah, yeah)"
+        else:
+            verso = f"{random.choice(palavras)} {random.choice(palavras)} {random.choice(palavras)}"
+        versos.append(verso.capitalize())
+    return "\\n".join(versos)
+
+def gen_beat(desc, style, dur, seed):
+  import numpy as np
+  np.random.seed(seed)
+  bpm = {"Trap":72,"Drill":140,"Funk BR":120,"Lofi":78,"Bossa":92,"Trance":138,"Coral":70,"Experimental":np.random.randint(60,150)}.get(style,90)
+  sr = 22050; t = np.linspace(0, dur, int(sr*dur), endpoint=False)
+  
+  def kick(env=1.5, f0=60): 
+    envs = np.exp(-np.linspace(0,env,int(sr*0.15)))
+    return 0.8*envs*np.sin(2*np.pi*np.cumsum(f0*np.exp(-5*np.linspace(0,1,int(sr*0.15)))/sr))
+  def snare(): 
+    n = np.random.randn(int(sr*0.09))
+    env = np.exp(-np.linspace(0,2.2,len(n)))
+    return env*n*0.5
+  def hat(): 
+    n = np.random.randn(int(sr*0.06))
+    env = np.exp(-np.linspace(0,10,len(n)))
+    return env*n*0.15
+  
+  nbeats = int(bpm*dur/60)
+  beat_t = sr*60/bpm
+  audio = np.zeros_like(t)
+  
+  for b in range(nbeats):
+    pos = int(b*beat_t)
+    if b%4==0: audio[pos:pos+3300] += kick()[:3300]
+    if b%4==2: audio[pos:pos+1900] += snare()[:1900]
+    if (b%2==0): audio[pos:pos+1300] += hat()[:1300]
+  
+  scale = [0,3,5,7,10] if style in ["Trap","Drill","Funk BR"] else [0,2,4,5,7,9,11]
+  root = 30 + (seed%12)
+  
+  for b in range(nbeats):
+    note = root + scale[np.random.randint(len(scale))]
+    start = int(b*beat_t)
+    ln = int(beat_t*0.8)
+    env = np.exp(-np.linspace(0,3,ln))
+    f = 2**((note-69)/12)*440
+    audio[start:start+ln] += 0.16*env*np.sin(2*np.pi*f*np.arange(ln)/sr)
+  
+  for b in range(nbeats//4):
+    note = root+12 + scale[np.random.randint(len(scale))]
+    pos = int(b*beat_t*4 + beat_t*2)
+    ln = int(beat_t*2)
+    env = np.exp(-np.linspace(0,2.1,ln))
+    f = 2**((note-69)/12)*440
+    audio[pos:pos+ln] += 0.09*env*np.sin(2*np.pi*f*np.arange(ln)/sr)
+  
+  if style=="Coral":
+    for i in range(3):
+      f = [261,329,392][i]
+      env = np.exp(-np.linspace(0,3,len(t)))
+      audio += 0.08*env*np.sin(2*np.pi*f*t + np.random.rand()*6)
+  
+  audio = audio/np.max(np.abs(audio))*0.8
+  
+  buf = io.BytesIO()
+  wavef = wave.open(buf, 'wb')
+  wavef.setnchannels(1)
+  wavef.setsampwidth(2)
+  wavef.setframerate(sr)
+  wavef.writeframes((audio*32767).astype('<i2').tobytes())
+  wavef.close()
+  wavb64 = base64.b64encode(buf.getvalue()).decode()
+  
+  midb64 = ''
+  if midiutil:
+    mf = midiutil.MIDIFile(1)
+    mf.addTempo(0, 0, bpm)
+    for b in range(nbeats):
+      note = root + scale[np.random.randint(len(scale))]
+      mf.addNote(0, 0, note, b*60/bpm, 60/bpm, 90)
+    buf2 = io.BytesIO()
+    mf.writeFile(buf2)
+    midb64 = base64.b64encode(buf2.getvalue()).decode()
+  
+  return {"wav":wavb64,"midi":midb64,"meta":{"bpm":bpm,"sr":sr,"desc":desc,"style":style,"seed":seed}}
+  `);
+  pyodideReady = true;
+  showStatus("Pronto!");
+}
+initPyodide();
+
+// ---- Music Generation Logic ----
+async function generateMusic() {
+  if (!pyodideReady) {showStatus("Pyodide não carregado",false); return;}
+  const {desc, dur, style, seed} = getFormVals();
+  showStatus("Gerando música...");
+  enableUI(false);
+  try {
+    musicData = await pyodide.runPythonAsync(`gen_beat(${JSON.stringify(desc)},${JSON.stringify(style)},${dur},${seed})`);
+    musicMeta = musicData.meta;
+    
+    const wav = Uint8Array.from(atob(musicData.wav), c=>c.charCodeAt(0));
+    wavBlob = new Blob([wav],{type:"audio/wav"});
+    
+    if (musicData.midi) {
+      const mid = Uint8Array.from(atob(musicData.midi), c=>c.charCodeAt(0));
+      midiBlob = new Blob([mid],{type:"audio/midi"});
+    } else {
+      midiBlob = null;
+    }
+    
+    audioBuffer = await decodeWavToAudioBuffer(wavBlob);
+    lastSeed = seed;
+    showStatus("Música gerada! Pronto para ouvir.");
+  } catch(e) {
+    showStatus("Erro: "+e.message,false);
+  }
+  enableUI(true);
+}
+
+// ---- Lyrics Generation ----
+async function generateLyrics() {
+  if (!pyodideReady) {showStatus("Pyodide não carregado",false); return;}
+  const seed = document.getElementById('lyrics-seed').value.trim() || "vida";
+  const style = document.getElementById('lyrics-style').value;
+  const length = +document.getElementById('lyrics-length').value;
+  
+  showStatus("Gerando letras...");
+  enableUI(false);
+  try {
+    currentLyrics = await pyodide.runPythonAsync(`generate_lyrics(${JSON.stringify(seed)}, ${JSON.stringify(style)}, ${length})`);
+    document.getElementById('lyrics-output').textContent = currentLyrics;
+    document.getElementById('lyrics-output').style.display = 'block';
+    showStatus("Letras geradas!");
+  } catch(e) {
+    showStatus("Erro: "+e.message,false);
+  }
+  enableUI(true);
+}
+
+// ---- Complete Generation ----
+async function generateComplete() {
+  if (!pyodideReady) {showStatus("Pyodide não carregado",false); return;}
+  const theme = document.getElementById('complete-theme').value.trim() || "vida urbana";
+  const style = currentCompleteStyle;
+  
+  showStatus("Gerando música + letras...");
+  enableUI(false);
+  try {
+    // Generate music
+    const seed = getSeed(theme + "|" + style);
+    musicData = await pyodide.runPythonAsync(`gen_beat(${JSON.stringify(theme)},${JSON.stringify(style)},15,${seed})`);
+    musicMeta = musicData.meta;
+    
+    const wav = Uint8Array.from(atob(musicData.wav), c=>c.charCodeAt(0));
+    wavBlob = new Blob([wav],{type:"audio/wav"});
+    
+    if (musicData.midi) {
+      const mid = Uint8Array.from(atob(musicData.midi), c=>c.charCodeAt(0));
+      midiBlob = new Blob([mid],{type:"audio/midi"});
+    }
+    
+    audioBuffer = await decodeWavToAudioBuffer(wavBlob);
+    
+    // Generate lyrics
+    currentLyrics = await pyodide.runPythonAsync(`generate_lyrics(${JSON.stringify(theme)}, ${JSON.stringify(style)}, 8)`);
+    
+    showStatus("Música + Letras geradas! Pronto para ouvir.");
+  } catch(e) {
+    showStatus("Erro: "+e.message,false);
+  }
+  enableUI(true);
+}
+
+// ---- Web Audio Player ----
+let ctx = null, sourceNode = null;
+async function decodeWavToAudioBuffer(blob) {
+  if (!ctx) ctx = new (window.AudioContext||window.webkitAudioContext)();
+  const arr = await blob.arrayBuffer();
+  return ctx.decodeAudioData(arr);
+}
+
+function playAudio() {
+  if (!audioBuffer) return showStatus("Gere a música primeiro.",false);
+  if (!ctx) ctx = new (window.AudioContext||window.webkitAudioContext)();
+  if (sourceNode) sourceNode.stop();
+  sourceNode = ctx.createBufferSource();
+  sourceNode.buffer = audioBuffer;
+  sourceNode.connect(ctx.destination);
+  sourceNode.start();
+  showStatus("▶️ Tocando...");
+  sourceNode.onended = ()=>showStatus("Pronto.");
+}
+
+// ---- Exporters ----
+function saveBlob(blob, fname) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = fname;
+  a.click();
+}
+
+function exportTxt() {
+  if (!currentLyrics) return showStatus("Gere as letras primeiro.",false);
+  const blob = new Blob([currentLyrics], {type: "text/plain"});
+  saveBlob(blob, "symbeat-lyrics.txt");
+}
+
+function exportComplete() {
+  if (!wavBlob || !currentLyrics) return showStatus("Gere música + letras primeiro.",false);
+  
+  // Create a zip-like text file with both
+  const content = `SymBeat Complete Export
+======================
+
+LETRAS:
+${currentLyrics}
+
+======================
+MÚSICA: symbeat.wav (baixar separadamente)
+ESTILO: ${musicMeta?.style || "N/A"}
+BPM: ${musicMeta?.bpm || "N/A"}
+DURAÇÃO: ${musicMeta?.sr ? "15s" : "N/A"}
+
+Gerado por SymBeat - Música IA 100% Local
+`;
+  
+  const blob = new Blob([content], {type: "text/plain"});
+  saveBlob(blob, "symbeat-complete.txt");
+  
+  // Also download the WAV
+  setTimeout(() => saveBlob(wavBlob, "symbeat-complete.wav"), 500);
+}
+
+function showPythonCode() {
+  const code = `
+# SymBeat Complete - Geração de Música + Letras
+# Música estilo '${musicMeta?.style||""}' + Letras
+desc = "${musicMeta?.desc||""}"
+style = "${musicMeta?.style||""}"
+seed = ${musicMeta?.seed||0}
+
+# Função de geração de letras
+def generate_lyrics(seed, style, length=8):
+    import random
+    random.seed(hash(seed + style) % (10**8))
+    # ... bases de palavras por estilo
+    # Veja código completo: github.com/stellameira0/suprememusic
+
+# Função de geração musical  
+def gen_beat(desc, style, dur, seed):
+    # ... síntese de bateria, baixo, melodia
+    # Veja código completo: github.com/stellameira0/suprememusic
+
+# Letras geradas:
+"""
+${currentLyrics || "Gere letras primeiro"}
+"""
+`;
+  document.getElementById('python-code').style.display = "block";
+  document.getElementById('python-code').textContent = code;
+}
+
+// ---- B91/QR ----
+const B91_TABLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?@[]^_`{|}~\"";
+function toB91(bytes) {
+  let v=0,b=0,s='',l=bytes.length;
+  for(let i=0;i<l;i++){
+    v|=bytes[i]<<b; b+=8;
+    if(b>13){
+      let x=v&8191;
+      if(x>88){ v>>=13; b-=13; }
+      else{ x=v&16383; v>>=14; b-=14; }
+      s+=B91_TABLE.charAt(x%91)+B91_TABLE.charAt((x/91)|0);
+    }
+  }
+  if(b){
+    s+=B91_TABLE.charAt(v%91);
+    if(b>7||v>90) s+=B91_TABLE.charAt((v/91)|0);
+  }
+  return s;
+}
+
+async function copyAppB91() {
+  showStatus("Gerando app em B91...");
+  enableUI(false);
+  const resp = await fetch(location.href);
+  const buf = await resp.arrayBuffer();
+  const b91 = toB91(new Uint8Array(buf));
+  await navigator.clipboard.writeText(b91);
+  showStatus("App copiado em Base91!");
+  enableUI(true);
+}
+
+function showQR(data, size=256) {
+  const box = document.getElementById('qr-box');
+  box.innerHTML = '<div style="color:#fff;font-size:0.9em">QR code não implementado nesta build.<br>Copie o B91 e gere QR externamente.</div>';
+  document.getElementById('qr-modal').style.display = 'flex';
+}
+
+function hideQR() {
+  document.getElementById('qr-modal').style.display = 'none';
+}
+
+// ---- UI Events ----
+document.getElementById('gen-btn').onclick = generateMusic;
+document.getElementById('play-btn').onclick = playAudio;
+document.getElementById('exp-wav-btn').onclick = ()=>wavBlob ? saveBlob(wavBlob, "symbeat.wav") : showStatus("Gere a música primeiro.",false);
+document.getElementById('exp-midi-btn').onclick = ()=>midiBlob ? saveBlob(midiBlob, "symbeat.mid") : showStatus("Sem MIDI disponível.",false);
+
+document.getElementById('gen-lyrics-btn').onclick = generateLyrics;
+document.getElementById('exp-txt-btn').onclick = exportTxt;
+
+document.getElementById('gen-complete-btn').onclick = generateComplete;
+document.getElementById('play-complete-btn').onclick = playAudio;
+document.getElementById('exp-complete-btn').onclick = exportComplete;
+
+document.getElementById('py-btn').onclick = showPythonCode;
+document.getElementById('b91-btn').onclick = copyAppB91;
+document.getElementById('qr-btn').onclick = ()=>showQR("B91 APP");
+
+document.getElementById('music-form').onsubmit = e=>e.preventDefault();
+document.getElementById('lyrics-form').onsubmit = e=>e.preventDefault();
+document.getElementById('complete-form').onsubmit = e=>e.preventDefault();
+</script>
+</body>
+</html>
