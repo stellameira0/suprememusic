@@ -1,9 +1,10 @@
-# 🎧 SymBeat – Música IA 100% Local
+# 🎧 SymBeat – Música e Letras IA 100% Local
 
-SymBeat é uma aplicação web que permite gerar música usando IA de forma 100% local, sem necessidade de conexão com servidores externos. A aplicação roda diretamente no navegador utilizando Pyodide para executar código Python.
+SymBeat é uma aplicação web que permite gerar música e letras usando IA de forma 100% local, sem necessidade de conexão com servidores externos. A aplicação roda diretamente no navegador utilizando Pyodide para executar código Python.
 
 ## 🎵 Funcionalidades
 
+### Geração de Música
 - **Geração de música** baseada em descrições textuais
 - **Seleção de estilos musicais** (Trap, Drill, Coral, Funk BR, Lofi, Bossa, Trance, Experimental)
 - **Controle de duração** da música (10-30 segundos)
@@ -12,13 +13,30 @@ SymBeat é uma aplicação web que permite gerar música usando IA de forma 100%
 - **Compartilhamento via Base91** para distribuição compacta
 - **Geração de QR Code** com a aplicação embutida
 
+### Geração de Letras
+- **Geração de letras** baseada em temas fornecidos pelo usuário
+- **Estilos de letras** adaptados a diferentes gêneros musicais
+- **Controle do número de versos** a serem gerados
+- **Exportação em formato TXT**
+- **Visualização do código Python** utilizado para gerar as letras
+
 ## 🚀 Como Usar
 
-1. Descreva a vibe ou gênero musical desejado
-2. Selecione um estilo musical predefinido
-3. Ajuste a duração desejada
-4. Clique em "Gerar" para criar sua música
-5. Use os botões para ouvir, exportar ou compartilhar sua criação
+### Gerador de Música
+1. Acesse `index.html` para o gerador de música
+2. Descreva a vibe ou gênero musical desejado
+3. Selecione um estilo musical predefinido
+4. Ajuste a duração desejada
+5. Clique em "Gerar" para criar sua música
+6. Use os botões para ouvir, exportar ou compartilhar sua criação
+
+### Gerador de Letras
+1. Acesse `lyrics.html` para o gerador de letras
+2. Descreva o tema da letra
+3. Selecione um estilo musical predefinido
+4. Ajuste o número de versos desejado
+5. Clique em "Gerar Letra" para criar sua letra
+6. Use os botões para copiar, exportar ou visualizar o código
 
 ## 💻 Tecnologias Utilizadas
 
