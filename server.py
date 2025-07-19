@@ -7,7 +7,7 @@ import http.server
 import socketserver
 import os
 
-PORT = 12000  # Porta padrão para o servidor
+PORT = 12001  # Porta padrão para o servidor
 
 class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
